@@ -47,51 +47,47 @@ export default function App() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
 
-  const BASE_URL_SING_IN = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-8414c9a8-3042-4e21-96ad-756a8cc0c49f/auth/sign-in';
-  const BASE_URL_SING_UP = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-158e4197-c750-4dc7-8294-c40711d72f0f/auth/sign-up';
+  const BASE_URL_SIGN_IN = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-8414c9a8-3042-4e21-96ad-756a8cc0c49f/auth/sign-in';
+  const BASE_URL_SIGN_UP = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-t9tapeqa3evztcmu799cg2a1/auth/sign-up';
 
   /**
-   * Updated handleLogin to perform an API request
-   */
-  const handleLogin = async (credentials: any) => {
-    setIsLoading(true);
-    setLoginError(null);
+ * Unified auth handler for both Login and Sign Up
+ */
+const handleAuth = async (credentials: any, isSignUp: boolean = false) => {
+  setIsLoading(true);
+  setLoginError(null);
 
-    try {
-      const response = await fetch(BASE_URL_SING_IN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
+  // Determine which endpoint to hit
+  const endpoint = isSignUp ? BASE_URL_SIGN_UP : BASE_URL_SIGN_IN;
 
-      if (!response.ok) {
-        throw new Error('Invalid credentials or server error');
-      }
-
-      const loggedInUser: User = await response.json();
-      
-      // Update state with the user data from the server
-      setUser(loggedInUser);
-      setCurrentPage('dashboard');
-    } catch (error) {
-      console.error("Login failed:", error);
-      setLoginError(error instanceof Error ? error.message : 'An unknown error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEnroll = (courseId: string) => {
-    if (!user) return;
-    setUser({
-      ...user,
-      enrolledCourses: [...user.enrolledCourses, courseId],
-      progress: { ...user.progress, [courseId]: 0 }
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
     });
+
+    if (!response.ok) {
+      // Try to parse server error message, fallback to generic error
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+    }
+
+    const userData: User = await response.json();
+    
+    // Update state with the user data from the server
+    setUser(userData);
     setCurrentPage('dashboard');
-  };
+  } catch (error) {
+    console.error(`${isSignUp ? 'Sign up' : 'Login'} failed:`, error);
+    setLoginError(error instanceof Error ? error.message : 'An unknown error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+};
+  
 
   const handleGenerateCourse = (newCourse: Course) => {
     setCourses([newCourse, ...courses]);
@@ -118,7 +114,7 @@ export default function App() {
   };
 
   if (!user) {
-    return <Auth onLogin={handleLogin} />;
+    return <Auth onLogin={handleAuth} isLoading={isLoading} loginError={loginError} />;
   }
 
   return (
@@ -143,7 +139,6 @@ export default function App() {
         <Catalog 
           courses={courses}
           user={user}
-          onEnroll={handleEnroll}
           onViewCourse={(id) => {
             setViewingCourseId(id);
             setCurrentPage('viewer');

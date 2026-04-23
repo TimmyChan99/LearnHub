@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, AlertCircle, CheckCircle } from 'lucide-react';
 import { User } from '../types';
 
 interface AuthProps {
-  onLogin: (user: User) => void;
+  onLogin: (user: User, isSignUp?: boolean) => void;
+  isLoading?: boolean;
+  loginError?: string | null;
 }
 
-export default function Auth({ onLogin }: AuthProps) {
+export default function Auth({ onLogin, isLoading = false, loginError = null }: AuthProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate backend auth
-
+    setSuccessMessage('');
+    
     if (!isSignUp) {
       onLogin({
         email: email,
         password: password
-      })
-
+      });
       return;
     }
 
@@ -31,7 +33,7 @@ export default function Auth({ onLogin }: AuthProps) {
       email: email,
       enrolledCourses: ['c1', 'c2'],
       progress: { c1: 45, c2: 12 },
-    });
+    }, true);
   };
 
   return (
@@ -55,6 +57,22 @@ export default function Auth({ onLogin }: AuthProps) {
               : 'Enter your credentials to access your dashboard.'}
           </p>
 
+          {/* Error Message */}
+          {loginError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle className="text-red-600 w-5 h-5 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-700">{loginError}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+              <CheckCircle className="text-green-600 w-5 h-5 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-green-700">{successMessage}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
@@ -62,7 +80,8 @@ export default function Auth({ onLogin }: AuthProps) {
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                  disabled={isLoading}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all disabled:opacity-50"
                   placeholder="Alex Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -74,7 +93,8 @@ export default function Auth({ onLogin }: AuthProps) {
               <input
                 type="email"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                disabled={isLoading}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all disabled:opacity-50"
                 placeholder="alex@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -85,7 +105,8 @@ export default function Auth({ onLogin }: AuthProps) {
               <input
                 type="password"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                disabled={isLoading}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all disabled:opacity-50"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -94,9 +115,10 @@ export default function Auth({ onLogin }: AuthProps) {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-bold mt-6"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-bold mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSignUp ? 'Sign up' : 'Sign in'}
+              {isLoading ? (isSignUp ? 'Signing up...' : 'Signing in...') : (isSignUp ? 'Sign up' : 'Sign in')}
             </button>
           </form>
 
@@ -105,7 +127,8 @@ export default function Auth({ onLogin }: AuthProps) {
             <button
               type='button'
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-indigo-600 font-bold hover:underline"
+              disabled={isLoading}
+              className="text-indigo-600 font-bold hover:underline disabled:opacity-50"
             >
               {isSignUp ? 'Sign in' : 'Sign up'}
             </button>
