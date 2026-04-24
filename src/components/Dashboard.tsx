@@ -9,10 +9,9 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ user, courses, onContinueCourse }: DashboardProps) {
-  const enrolledCourses = courses.filter((c) => user.enrolledCourses.includes(c.id));
   
-  const overallProgress = enrolledCourses.length > 0 
-    ? Math.round(enrolledCourses.reduce((acc, course) => acc + (user.progress[course.id] || 0), 0) / enrolledCourses.length)
+  const overallProgress = courses.length > 0 
+    ? Math.round(courses.reduce((acc, course) => acc + (user.progress[course.id] || 0), 0) / courses.length)
     : 0;
 
   return (
@@ -32,7 +31,7 @@ export default function Dashboard({ user, courses, onContinueCourse }: Dashboard
             <BookOpen className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Enrolled</span>
           </div>
-          <div className="text-2xl font-bold">{enrolledCourses.length}</div>
+          <div className="text-2xl font-bold">{courses.length}</div>
           <p className="text-sm text-slate-400 mt-2">Active courses</p>
         </div>
         
@@ -64,14 +63,13 @@ export default function Dashboard({ user, courses, onContinueCourse }: Dashboard
         </div>
       </div>
 
-      {/* Enrolled Courses */}
+      {/* Courses */}
       <div>
         <h2 className="text-lg font-bold text-slate-900 mb-6 flex justify-between items-center">
           Current Progress
-          <span className="text-sm text-indigo-600 font-semibold cursor-pointer">View All</span>
         </h2>
         
-        {enrolledCourses.length === 0 ? (
+        {courses.length === 0 ? (
           <div className="bg-white p-12 rounded-2xl border border-dashed border-slate-300 text-center">
             <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-1">No active courses</h3>
@@ -79,14 +77,14 @@ export default function Dashboard({ user, courses, onContinueCourse }: Dashboard
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {enrolledCourses.map((course) => {
-              const progress = user.progress[course.id] || 0;
+            {courses.map((course) => {
+              const progress = course.progress || 0;
               return (
                 <div key={course.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer" onClick={() => onContinueCourse(course.id)}>
                   <div className="p-6 flex-1">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-wider rounded-lg">
-                        {course.level}
+                        Beginner
                       </span>
                       <span className="flex items-center text-xs text-slate-500 font-medium ml-auto">
                         <Clock className="w-3.5 h-3.5 mr-1" />

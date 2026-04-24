@@ -4,12 +4,10 @@ import { Plus, Check, Clock, BookOpen } from 'lucide-react';
 
 interface CatalogProps {
   courses: Course[];
-  user: User;
-  onEnroll: (courseId: string) => void;
   onViewCourse: (courseId: string) => void;
 }
 
-export default function Catalog({ courses, user, onEnroll, onViewCourse }: CatalogProps) {
+export default function Catalog({ courses, onViewCourse }: CatalogProps) {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
@@ -20,7 +18,6 @@ export default function Catalog({ courses, user, onEnroll, onViewCourse }: Catal
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => {
-          const isEnrolled = user.enrolledCourses.includes(course.id);
           
           return (
             <div key={course.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col hover:shadow-md transition-shadow">
@@ -46,22 +43,12 @@ export default function Catalog({ courses, user, onEnroll, onViewCourse }: Catal
               </div>
               
               <div className="p-6 pt-0">
-                {isEnrolled ? (
                   <button 
                     onClick={() => onViewCourse(course.id)}
                     className="w-full flex items-center justify-center gap-2 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors"
                   >
                     Go to Course
                   </button>
-                ) : (
-                  <button 
-                    onClick={() => onEnroll(course.id)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 shadow-sm transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Enroll Now
-                  </button>
-                )}
               </div>
             </div>
           );

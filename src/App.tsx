@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Course } from './types';
+import { supabase } from './supabase.ts'; // Assuming your Supabase client is exported from here
 import Auth from './components/Auth';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -7,36 +8,13 @@ import Catalog from './components/Catalog';
 import CourseViewer from './components/CourseViewer';
 import CourseGenerator from './components/CourseGenerator';
 
-const INITIAL_COURSES: Course[] = [
-  {
-    id: 'c1',
-    title: 'Advanced Machine Learning',
-    description: 'Dive deep into neural networks, deep learning, and advanced AI architectures with practical implementations.',
-    duration: '8 Weeks',
-    level: 'Advanced',
-    modules: ['Neural Networks Basics', 'Convolutional Networks', 'RNNs and LSTMs', 'Transformers & Attention', 'Deployment Strategies']
-  },
-  {
-    id: 'c2',
-    title: 'Functional React Patterns',
-    description: 'Learn modern React development using hooks, suspense, and functional composition for scalable apps.',
-    duration: '4 Weeks',
-    level: 'Intermediate',
-    modules: ['Hooks Deep Dive', 'Custom Hooks', 'Context & State Management', 'Performance Optimization']
-  },
-  {
-    id: 'c3',
-    title: 'Introduction to Rust',
-    description: 'A beginner-friendly curriculum for learning memory safety, ownership, and systems programming in Rust.',
-    duration: '6 Weeks',
-    level: 'Beginner',
-    modules: ['Syntax & Basics', 'Ownership & Borrowing', 'Structs & Enums', 'Error Handling', 'Concurrency']
-  }
-];
+// Remove INITIAL_COURSES as we'll fetch from Supabase
+// const INITIAL_COURSES: Course[] = [...]; // Commented out or removed
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true); // New state for loading courses
   
   // Pages: 'dashboard', 'catalog', 'generator', 'viewer'
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -46,47 +24,88 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-
   const BASE_URL_SIGN_IN = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-8414c9a8-3042-4e21-96ad-756a8cc0c49f/auth/sign-in';
   const BASE_URL_SIGN_UP = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-t9tapeqa3evztcmu799cg2a1/auth/sign-up';
 
-  /**
- * Unified auth handler for both Login and Sign Up
- */
-const handleAuth = async (credentials: any, isSignUp: boolean = false) => {
-  setIsLoading(true);
-  setLoginError(null);
+  // Function to fetch courses and their chapters from Supabase
+  const fetchCourses = async () => {
+    try {
+      setCoursesLoading(true);
+      // Fetch all courses
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('courses')
+        .select('*');
 
-  // Determine which endpoint to hit
-  const endpoint = isSignUp ? BASE_URL_SIGN_UP : BASE_URL_SIGN_IN;
+        console.log('Fetched supabase:', supabase);
+        console.log('Fetched courses:', coursesData);
+      if (coursesError) throw coursesError;
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
+      // For each course, fetch its chapters
+      const coursesWithChapters = await Promise.all(
+        coursesData.map(async (course) => {
+          const { data: chapters, error: chaptersError } = await supabase
+            .from('chapitres')
+            .select('*')
+            .eq('course_id', course.id);
 
-    if (!response.ok) {
-      // Try to parse server error message, fallback to generic error
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+          if (chaptersError) throw chaptersError;
+
+          return { ...course, chapters: chapters || [] }; // Attach chapters to the course
+        })
+      );
+
+      console.log('Courses with chapters:', coursesWithChapters);
+      setCourses(coursesWithChapters);
+    } catch (error) {
+      console.error('Error fetching courses and chapters:', error);
+      // Optionally, set an error state here if needed
+    } finally {
+      setCoursesLoading(false);
     }
+  };
 
-    const userData: User = await response.json();
-    
-    // Update state with the user data from the server
-    setUser(userData);
-    setCurrentPage('dashboard');
-  } catch (error) {
-    console.error(`${isSignUp ? 'Sign up' : 'Login'} failed:`, error);
-    setLoginError(error instanceof Error ? error.message : 'An unknown error occurred');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  // Fetch courses on component mount
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  /**
+   * Unified auth handler for both Login and Sign Up
+   */
+  const handleAuth = async (credentials: any, isSignUp: boolean = false) => {
+    setIsLoading(true);
+    setLoginError(null);
+
+    // Determine which endpoint to hit
+    const endpoint = isSignUp ? BASE_URL_SIGN_UP : BASE_URL_SIGN_IN;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        // Try to parse server error message, fallback to generic error
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+      }
+
+      const userData: User = await response.json();
+      
+      // Update state with the user data from the server
+      setUser(userData);
+      setCurrentPage('dashboard');
+    } catch (error) {
+      console.error(`${isSignUp ? 'Sign up' : 'Login'} failed:`, error);
+      setLoginError(error instanceof Error ? error.message : 'An unknown error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
 
   const handleGenerateCourse = (newCourse: Course) => {
@@ -117,6 +136,11 @@ const handleAuth = async (credentials: any, isSignUp: boolean = false) => {
     return <Auth onLogin={handleAuth} isLoading={isLoading} loginError={loginError} />;
   }
 
+  // Show loading indicator while fetching courses
+  if (coursesLoading) {
+    return <div>Loading courses...</div>; 
+  }
+
   return (
     <Layout 
       user={user} 
@@ -138,7 +162,6 @@ const handleAuth = async (credentials: any, isSignUp: boolean = false) => {
       {currentPage === 'catalog' && (
         <Catalog 
           courses={courses}
-          user={user}
           onViewCourse={(id) => {
             setViewingCourseId(id);
             setCurrentPage('viewer');

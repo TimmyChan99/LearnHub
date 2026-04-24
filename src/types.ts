@@ -10,7 +10,7 @@ export interface Course {
   id: string;
   title: string;
   description: string;
-  modules: string[];
+  chapters: string[];
   duration: string;
-  level: string;
+  progress: number;
 }
