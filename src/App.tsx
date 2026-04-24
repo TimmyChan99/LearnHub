@@ -28,7 +28,7 @@ export default function App() {
   const [isGeneratingCourse, setIsGeneratingCourse] = useState(false);
 
   const BASE_URL_SIGN_IN = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-8414c9a8-3042-4e21-96ad-756a8cc0c49f/auth/sign-in';
-  const BASE_URL_SIGN_UP = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-t9tapeqa3evztcmu799cg2a1/auth/sign-up';
+  const BASE_URL_SIGN_UP = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-wx4dulh6wfrnbeja6h31qeiy/sign';
 
   // Function to fetch courses and their chapters from Supabase
   const fetchCourses = async () => {
@@ -125,7 +125,38 @@ export default function App() {
         throw new Error('Failed to generate course');
       }
 
-      const newCourse: Course = await response.json();
+      const responseData = await response.json();
+      
+      // Extract course ID from the response
+      // Adjust based on your API response structure (e.g., responseData.id or responseData.course_id)
+      const courseId = responseData.id || responseData.course_id;
+
+      if (!courseId) {
+        throw new Error('No course ID returned from API');
+      }
+
+      // Fetch the generated course and its chapters from Supabase
+      const { data: courseData, error: courseError } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', courseId)
+        .single();
+
+      if (courseError) throw courseError;
+
+      // Fetch chapters for the generated course
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from('chapitres')
+        .select('*')
+        .eq('course_id', courseId);
+
+      if (chaptersError) throw chaptersError;
+
+      // Combine course data with chapters
+      const newCourse: Course = {
+        ...courseData,
+        chapters: chaptersData || []
+      };
 
       // Add the new course to the courses state
       setCourses([newCourse, ...courses]);
@@ -134,16 +165,16 @@ export default function App() {
       if (user) {
         setUser({
           ...user,
+          enrolledCourses: [newCourse.id, ...user.enrolledCourses],
           progress: { ...user.progress, [newCourse.id]: 0 }
         });
       }
 
-      // Navigate to the course viewer
-      setViewingCourseId(newCourse.id);
-      setCurrentPage('viewer');
+      // Navigate to the dashboard
+      setCurrentPage('dashboard');
     } catch (error) {
       console.error('Error generating course:', error);
-      // set an error state for course generation here 
+      // Optionally, set an error state for course generation here (e.g., setCourseGenError)
     } finally {
       setIsGeneratingCourse(false);
     }

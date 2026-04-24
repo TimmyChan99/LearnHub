@@ -45,7 +45,7 @@ export default function Auth({ onLogin, isLoading = false, loginError = null }: 
             <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
               <Sparkles className="text-white w-5 h-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900">LuminaLearn</span>
+            <span className="font-bold text-xl tracking-tight text-slate-900">LearnHub</span>
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight mb-2">

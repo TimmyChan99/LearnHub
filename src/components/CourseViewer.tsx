@@ -15,8 +15,35 @@ export default function CourseViewer({ course, progress, onBack, onUpdateProgres
   const hasChapters = chapters?.length > 0;
   const activeChapter = hasChapters ? chapters[activeModuleIndex] : null;
 
-  const handleCompleteModule = () => {
+  // Function to mark a chapter as completed by sending a request to the API
+  const markChapterCompleted = async (chapterId: string) => {
+    try {
+      const response = await fetch('https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-p2o8weuycaynh3bhnb2i3ab5/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: chapterId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to mark chapter as completed');
+      }
+
+      console.log('Chapter marked as completed:', chapterId);
+    } catch (error) {
+      console.error('Error marking chapter as completed:', error);
+    }
+  };
+
+  const handleCompleteModule = async () => {
     if (!hasChapters) return;
+
+    // Mark the current chapter as completed
+    const currentChapterId = activeChapter?.id;
+    if (currentChapterId) {
+      await markChapterCompleted(currentChapterId);
+    }
 
     if (activeModuleIndex < chapters?.length - 1) {
       setActiveModuleIndex(activeModuleIndex + 1);
@@ -105,7 +132,6 @@ export default function CourseViewer({ course, progress, onBack, onUpdateProgres
               </h1>
 
               <div className="prose prose-slate prose-lg max-w-none">
-
                 <p className="text-slate-600 leading-relaxed mb-6">
                   {activeChapter.content.content}
                 </p>
