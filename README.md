@@ -2,6 +2,8 @@
 
 LearnHub is an AI-powered learning platform that generates custom courses tailored to your learning needs. Explore AI-generated curriculums, track your progress, and learn at your own pace.
 
+<img width="1452" height="865" alt="image" src="https://github.com/user-attachments/assets/d98f5eef-e357-4d52-9c9c-66c4ab4e2911" />
+
 ## Features
 
 - **AI Course Generation**: Generate custom courses by simply describing what you want to learn
@@ -221,7 +223,6 @@ LearnHub/
 | id | UUID | Primary key |
 | title | String | Course title |
 | description | Text | Course description |
-| level | String | Difficulty level |
 | duration | String | Estimated duration |
 | created_at | Timestamp | Creation date |
 | updated_at | Timestamp | Last update date |
@@ -354,10 +355,6 @@ The application uses **Tailwind CSS** for styling with:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support, email support@learnhub.com or open an issue on GitHub.
 
 ## Acknowledgments
 
