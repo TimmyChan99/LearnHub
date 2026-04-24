@@ -1,42 +1,20 @@
 import React, { useState } from 'react';
-import { Course } from '../types';
-import { Sparkles, Loader2, Bot, Layers, Target, Clock as ClockIcon } from 'lucide-react';
+import { Sparkles, Loader2, Bot } from 'lucide-react';
 
 interface CourseGeneratorProps {
-  onCourseGenerated: (course: Course) => void;
+  onCourseGenerated: (title: string) => void;
+  isGenerating: boolean;
 }
 
-export default function CourseGenerator({ onCourseGenerated }: CourseGeneratorProps) {
+export default function CourseGenerator({ onCourseGenerated, isGenerating }: CourseGeneratorProps) {
   const [topic, setTopic] = useState('');
-  const [level, setLevel] = useState('Beginner');
-  const [focus, setFocus] = useState('Theoretical');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic) return;
+    if (!topic || isGenerating) return;
 
-    setIsGenerating(true);
-
-    // Simulate AI generation delay
-    setTimeout(() => {
-      const newCourse: Course = {
-        id: `gen-${Date.now()}`,
-        title: `Mastering ${topic}`,
-        description: `An extensively tailored AI curriculum focusing on ${topic}. Created specifically for a ${level} level.`,
-        duration: '4 Weeks',
-        level: level,
-        modules: [
-          `Introduction to ${topic}`,
-          `Core Concepts & Theory`,
-          `Practical Applications`,
-          `Advanced Topics in ${topic}`
-        ]
-      };
-      setIsGenerating(false);
-      setTopic('');
-      onCourseGenerated(newCourse);
-    }, 2500);
+    onCourseGenerated(topic);
+    setTopic(''); 
   };
 
   return (
@@ -69,61 +47,14 @@ export default function CourseGenerator({ onCourseGenerated }: CourseGeneratorPr
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               required
+              disabled={isGenerating}
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-            <div>
-              <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-indigo-100 mb-4">
-                <Layers className="w-4 h-4" />
-                Difficulty Level
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {['Beginner', 'Intermediate', 'Advanced'].map(lvl => (
-                  <button
-                    key={lvl}
-                    type="button"
-                    onClick={() => setLevel(lvl)}
-                    className={`py-3 px-4 rounded-xl text-sm font-bold transition-all ${
-                      level === lvl 
-                        ? 'bg-white text-indigo-600 shadow-md' 
-                        : 'bg-indigo-500 text-indigo-100 hover:bg-indigo-400'
-                    }`}
-                  >
-                    {lvl}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-indigo-100 mb-4">
-                <Target className="w-4 h-4" />
-                Primary Focus
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {['Theoretical', 'Practical Project'].map(foc => (
-                  <button
-                    key={foc}
-                    type="button"
-                    onClick={() => setFocus(foc)}
-                    className={`py-3 px-4 rounded-xl text-sm font-bold transition-all ${
-                      focus === foc 
-                        ? 'bg-white text-indigo-600 shadow-md' 
-                        : 'bg-indigo-500 text-indigo-100 hover:bg-indigo-400'
-                    }`}
-                  >
-                    {foc}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="pt-8 border-t border-indigo-500/50 flex items-center justify-between">
             <div className="flex items-center text-sm font-medium text-indigo-200">
               <Bot className="w-5 h-5 mr-2 text-indigo-300" />
-              Powered by Kognate Engine v4
+              Powered by Fusion AI
             </div>
             
             <button

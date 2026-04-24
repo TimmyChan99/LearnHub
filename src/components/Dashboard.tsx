@@ -78,7 +78,7 @@ export default function Dashboard({ user, courses, onContinueCourse }: Dashboard
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => {
-              const progress = course.progress || 0;
+              const progress = course.progress * 100 / course.chapters.length || 0;
               return (
                 <div key={course.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer" onClick={() => onContinueCourse(course.id)}>
                   <div className="p-6 flex-1">

@@ -11,14 +11,18 @@ interface CourseViewerProps {
 
 export default function CourseViewer({ course, progress, onBack, onUpdateProgress }: CourseViewerProps) {
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const chapters = course.chapters || [];
+  const hasChapters = chapters?.length > 0;
+  const activeChapter = hasChapters ? chapters[activeModuleIndex] : null;
 
   const handleCompleteModule = () => {
-    if (activeModuleIndex < course.modules.length - 1) {
+    if (!hasChapters) return;
+
+    if (activeModuleIndex < chapters?.length - 1) {
       setActiveModuleIndex(activeModuleIndex + 1);
     }
-    
-    // Simulate progress update
-    const newProgress = Math.min(100, Math.round(((activeModuleIndex + 1) / course.modules.length) * 100));
+
+    const newProgress = Math.min(100, Math.round(((activeModuleIndex + 1) / chapters?.length) * 100));
     onUpdateProgress(newProgress);
   };
 
@@ -27,19 +31,19 @@ export default function CourseViewer({ course, progress, onBack, onUpdateProgres
       {/* Sidebar / Syllabus */}
       <div className="w-80 border-r border-slate-200 flex flex-col pt-6 bg-white">
         <div className="px-6 mb-6">
-          <button 
+          <button
             onClick={onBack}
             className="flex items-center text-sm font-bold text-slate-500 hover:text-indigo-600 mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </button>
-          
+
           <h2 className="font-bold text-lg leading-snug mb-2">{course.title}</h2>
-          
+
           <div className="flex items-center gap-2 mb-4">
             <div className="flex-1 bg-slate-200 h-2 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="bg-indigo-600 h-full rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
               ></div>
@@ -47,95 +51,87 @@ export default function CourseViewer({ course, progress, onBack, onUpdateProgres
             <span className="text-xs font-bold text-slate-500">{progress}%</span>
           </div>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-1">
-          {course.modules.map((mod, index) => {
-            const isActive = index === activeModuleIndex;
-            const isCompleted = index < activeModuleIndex || progress === 100;
-            
-            return (
-              <button
-                key={index}
-                onClick={() => setActiveModuleIndex(index)}
-                className={`w-full text-left p-3 rounded-xl transition-all flex items-start gap-3 ${
-                  isActive ? 'bg-indigo-50 shadow-sm border border-indigo-100 text-indigo-900' : 'hover:bg-slate-50 border border-transparent text-slate-600'
-                }`}
-              >
-                <div className="mt-0.5">
-                  {isCompleted ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  ) : isActive ? (
-                    <PlayCircle className="w-5 h-5 text-indigo-600" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-slate-300" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className={`text-sm font-bold ${isActive ? 'text-indigo-900' : 'text-slate-600'}`}>
-                    Module {index + 1}
-                  </p>
-                  <p className={`text-xs mt-1 line-clamp-2 ${isActive ? 'text-indigo-700/80' : 'text-slate-500'}`}>{mod}</p>
-                </div>
-              </button>
-            );
-          })}
+          {hasChapters ? (
+            chapters.map((mod, index) => {
+              const isActive = index === activeModuleIndex;
+              const isCompleted = index < activeModuleIndex || progress === 100;
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => setActiveModuleIndex(index)}
+                  className={`w-full text-left p-3 rounded-xl transition-all flex items-start gap-3 ${
+                    isActive ? 'bg-indigo-50 shadow-sm border border-indigo-100 text-indigo-900' : 'hover:bg-slate-50 border border-transparent text-slate-600'
+                  }`}
+                >
+                  <div className="mt-0.5">
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    ) : isActive ? (
+                      <PlayCircle className="w-5 h-5 text-indigo-600" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-sm font-bold ${isActive ? 'text-indigo-900' : 'text-slate-600'}`}>
+                      Module {index + 1}
+                    </p>
+                    <p className={`text-xs mt-1 line-clamp-2 ${isActive ? 'text-indigo-700/80' : 'text-slate-500'}`}>{mod.title}</p>
+                  </div>
+                </button>
+              );
+            })
+          ) : (
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 text-sm text-center">
+              No chapters available for this course.
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto relative">
         <div className="max-w-3xl mx-auto px-12 py-16">
-          <span className="text-sm font-bold tracking-wider uppercase text-indigo-600 mb-4 block">
-            Module {activeModuleIndex + 1}
-          </span>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-8">
-            {course.modules[activeModuleIndex]}
-          </h1>
-          
-          <div className="prose prose-slate prose-lg max-w-none">
-            <p className="text-xl text-slate-600 leading-relaxed mb-8">
-              This is simulated course content that would normally be generated by the AI backend based on the module title.
-            </p>
-            
-            <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm mb-8">
-              <h3 className="flex items-center text-lg font-bold mb-4">
-                <FileText className="w-5 h-5 mr-3 text-indigo-400" />
-                Key Concepts
-              </h3>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 mr-3 flex-shrink-0" />
-                  Understand the foundational principles of this topic.
-                </li>
-                <li className="flex items-start">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 mr-3 flex-shrink-0" />
-                  Apply theoretical knowledge to practical examples.
-                </li>
-                <li className="flex items-start">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 mr-3 flex-shrink-0" />
-                  Analyze and solve complex problems using learned logic.
-                </li>
-              </ul>
+          {hasChapters && activeChapter ? (
+            <>
+              <span className="text-sm font-bold tracking-wider uppercase text-indigo-600 mb-4 block">
+                Module {activeModuleIndex + 1}
+              </span>
+              <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-8">
+                {activeChapter.content.chapter}
+              </h1>
+
+              <div className="prose prose-slate prose-lg max-w-none">
+
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  {activeChapter.content.content}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="p-12 rounded-3xl bg-slate-50 border border-slate-200 text-center">
+              <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-slate-900 mb-3">No chapters yet</h1>
+              <p className="text-slate-600">
+                This course does not contain any chapters yet. Please check back later or choose another course.
+              </p>
             </div>
+          )}
 
-            <p className="text-slate-600 leading-relaxed mb-6">
-               Here you would have rich text, code blocks, diagrams, and video lessons depending on what the AI generates. The platform automatically formats markdown responses into a beautiful reading experience using custom components.
-            </p>
-            
-            <p className="text-slate-600 leading-relaxed mb-12">
-               Once you've reviewed the material, you can mark the module as complete to move on to the next section and update your dashboard statistics.
-            </p>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-slate-100 flex justify-end">
-            <button
-              onClick={handleCompleteModule}
-              className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center shadow-lg shadow-indigo-600/20"
-            >
-              Complete & Continue
-              <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
-            </button>
-          </div>
+          {hasChapters && (
+            <div className="mt-12 pt-8 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={handleCompleteModule}
+                className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center shadow-lg shadow-indigo-600/20"
+              >
+                Complete & Continue
+                <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

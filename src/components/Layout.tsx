@@ -51,11 +51,6 @@ export default function Layout({ user, currentPage, onNavigate, onLogout, childr
         </div>
 
         <div className="p-4 border-t border-slate-200">
-          <div className="bg-indigo-900 rounded-2xl p-4 text-white mb-4">
-            <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-1 opacity-70 mb-1">Pro Plan</p>
-            <p className="text-sm font-medium mb-3">Generate unlimited AI courses.</p>
-            <button className="w-full py-2 bg-white text-indigo-900 text-xs font-bold rounded-lg transition-transform hover:scale-105">Upgrade Now</button>
-          </div>
           
           <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 mb-2">
             <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">

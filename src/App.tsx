@@ -24,6 +24,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  // Add loading state for course generation
+  const [isGeneratingCourse, setIsGeneratingCourse] = useState(false);
+
   const BASE_URL_SIGN_IN = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-8414c9a8-3042-4e21-96ad-756a8cc0c49f/auth/sign-in';
   const BASE_URL_SIGN_UP = 'https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-t9tapeqa3evztcmu799cg2a1/auth/sign-up';
 
@@ -36,7 +39,6 @@ export default function App() {
         .from('courses')
         .select('*');
 
-        console.log('Fetched supabase:', supabase);
         console.log('Fetched courses:', coursesData);
       if (coursesError) throw coursesError;
 
@@ -108,17 +110,43 @@ export default function App() {
   };
   
 
-  const handleGenerateCourse = (newCourse: Course) => {
-    setCourses([newCourse, ...courses]);
-    if (user) {
-      setUser({
-        ...user,
-        enrolledCourses: [newCourse.id, ...user.enrolledCourses],
-        progress: { ...user.progress, [newCourse.id]: 0 }
+  const handleGenerateCourse = async (title: string) => {
+    setIsGeneratingCourse(true);
+    try {
+      const response = await fetch('https://corsproxy.io/https://fusion-ai-api.medifus.dev/webhooks/webhook-szumbo1v862q3omhvcxxfyl1/course', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate course');
+      }
+
+      const newCourse: Course = await response.json();
+
+      // Add the new course to the courses state
+      setCourses([newCourse, ...courses]);
+
+      // Update user progress if user is logged in
+      if (user) {
+        setUser({
+          ...user,
+          progress: { ...user.progress, [newCourse.id]: 0 }
+        });
+      }
+
+      // Navigate to the course viewer
+      setViewingCourseId(newCourse.id);
+      setCurrentPage('viewer');
+    } catch (error) {
+      console.error('Error generating course:', error);
+      // set an error state for course generation here 
+    } finally {
+      setIsGeneratingCourse(false);
     }
-    setViewingCourseId(newCourse.id);
-    setCurrentPage('viewer');
   };
 
   const handleUpdateProgress = (courseId: string, progress: number) => {
@@ -159,7 +187,7 @@ export default function App() {
         />
       )}
       
-      {currentPage === 'catalog' && (
+      {currentPage === 'catalog' && viewingCourseId && (
         <Catalog 
           courses={courses}
           onViewCourse={(id) => {
@@ -170,13 +198,13 @@ export default function App() {
       )}
       
       {currentPage === 'generator' && (
-        <CourseGenerator onCourseGenerated={handleGenerateCourse} />
+        <CourseGenerator onCourseGenerated={handleGenerateCourse} isGenerating={isGeneratingCourse} />
       )}
       
       {currentPage === 'viewer' && viewingCourseId && (
         <CourseViewer 
           course={courses.find(c => c.id === viewingCourseId)!}
-          progress={user.progress[viewingCourseId] || 0}
+          progress={courses.find(c => c.id === viewingCourseId)?.progress * 100 / courses.find(c => c.id === viewingCourseId)?.chapters.length || 0}
           onBack={() => setCurrentPage('dashboard')}
           onUpdateProgress={(prog) => handleUpdateProgress(viewingCourseId, prog)}
         />
